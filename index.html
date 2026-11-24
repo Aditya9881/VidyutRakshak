@@ -1,0 +1,1971 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>⚡ VidyutRakshak IoT - Rural Feeder & Farmer Life Safety System</title>
+    
+    <!-- Google Fonts: Inter & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Chart.js for Industrial Waveforms -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Firebase SDK (v8) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    
+    <!-- Font Awesome 6 Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            /* Cyber Industrial & Rural Safety Palette */
+            --bg-primary: #080d1a;
+            --bg-secondary: #0f172a;
+            --bg-tertiary: #1e293b;
+            --bg-glass: rgba(15, 23, 42, 0.85);
+            --bg-glass-elevated: rgba(30, 41, 59, 0.9);
+            --border-subtle: rgba(255, 255, 255, 0.08);
+            --border-highlight: rgba(255, 255, 255, 0.18);
+            
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            
+            --color-normal: #10b981;
+            --color-normal-glow: rgba(16, 185, 129, 0.4);
+            --color-warning: #f59e0b;
+            --color-warning-glow: rgba(245, 158, 11, 0.4);
+            --color-danger: #ef4444;
+            --color-danger-glow: rgba(239, 68, 68, 0.5);
+            --color-info: #06b6d4;
+            --color-accent: #3b82f6;
+            --color-safety: #10b981;
+            --color-farm-gold: #fbbf24;
+            
+            /* Phase Colors */
+            --phase-red: #f43f5e;
+            --phase-yellow: #eab308;
+            --phase-blue: #38bdf8;
+            --phase-neutral: #94a3b8;
+            
+            --radius-sm: 8px;
+            --radius-md: 14px;
+            --radius-lg: 20px;
+            --radius-xl: 28px;
+            
+            --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+            --transition-smooth: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            
+            --shadow-subtle: 0 4px 20px -2px rgba(0, 0, 0, 0.5);
+            --shadow-card: 0 10px 30px -5px rgba(0, 0, 0, 0.6);
+        }
+
+        [data-theme="light"] {
+            --bg-primary: #f8fafc;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #e2e8f0;
+            --bg-glass: rgba(255, 255, 255, 0.9);
+            --bg-glass-elevated: rgba(255, 255, 255, 0.98);
+            --border-subtle: rgba(0, 0, 0, 0.08);
+            --border-highlight: rgba(0, 0, 0, 0.16);
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+            --shadow-card: 0 10px 25px rgba(0, 0, 0, 0.08);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.5;
+            overflow-x: hidden;
+            transition: background-color 0.3s ease, color 0.3s ease;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(6, 182, 212, 0.06) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(245, 158, 11, 0.06) 0px, transparent 50%);
+        }
+
+        /* Top Institutional Banner */
+        .institution-strip {
+            background: linear-gradient(90deg, #1e3a8a 0%, #0f172a 50%, #065f46 100%);
+            border-bottom: 1px solid var(--border-subtle);
+            padding: 6px 20px;
+            font-size: 0.72rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+            color: #e2e8f0;
+        }
+
+        .inst-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+        }
+
+        .inst-left span.highlight {
+            color: var(--color-farm-gold);
+            font-weight: 700;
+        }
+
+        .inst-right {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            font-size: 0.7rem;
+            color: #cbd5e1;
+        }
+
+        /* Main Header */
+        .header {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: var(--bg-glass);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border-subtle);
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .brand-cluster {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .brand-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: var(--radius-md);
+            background: linear-gradient(135deg, #0284c7 0%, #10b981 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.4rem;
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+            animation: pulseSubtle 3s infinite;
+        }
+
+        @keyframes pulseSubtle {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.04); }
+        }
+
+        .brand-text h1 {
+            font-size: 1.15rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            letter-spacing: -0.01em;
+        }
+
+        .badge-rural {
+            font-family: var(--font-mono);
+            font-size: 0.65rem;
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--color-farm-gold);
+            border: 1px solid rgba(245, 158, 11, 0.4);
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .brand-subline {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .mode-toggle-group {
+            display: flex;
+            background: var(--bg-tertiary);
+            padding: 3px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-subtle);
+        }
+
+        .mode-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 5px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .mode-btn.active {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .mode-btn.sim-active {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: #000;
+            box-shadow: 0 0 12px rgba(245, 158, 11, 0.4);
+        }
+
+        .utility-btn {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-secondary);
+            width: 36px;
+            height: 36px;
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            font-size: 0.9rem;
+        }
+
+        .utility-btn:hover {
+            color: var(--text-primary);
+            border-color: var(--border-highlight);
+        }
+
+        .utility-btn.alarm-on {
+            color: var(--color-danger);
+            border-color: var(--color-danger);
+            animation: ring 1.5s infinite;
+        }
+
+        @keyframes ring {
+            0%, 100% { transform: rotate(0); }
+            20% { transform: rotate(-15deg); }
+            40% { transform: rotate(15deg); }
+            60% { transform: rotate(-10deg); }
+            80% { transform: rotate(10deg); }
+        }
+
+        .connection-chip {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-subtle);
+            border-radius: 30px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        .pulse-dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            background: var(--color-normal);
+            box-shadow: 0 0 10px var(--color-normal);
+            transition: var(--transition-smooth);
+        }
+
+        .pulse-dot.danger {
+            background: var(--color-danger);
+            box-shadow: 0 0 12px var(--color-danger);
+        }
+
+        .pulse-dot.sim {
+            background: var(--color-warning);
+            box-shadow: 0 0 12px var(--color-warning);
+        }
+
+        /* Navigation Tabs */
+        .nav-tabs-wrapper {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-subtle);
+            padding: 0 24px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+
+        .nav-tabs-wrapper::-webkit-scrollbar {
+            display: none;
+        }
+
+        .nav-tab-btn {
+            background: transparent;
+            border: none;
+            outline: none;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            font-weight: 600;
+            padding: 14px 18px;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 2px solid transparent;
+            white-space: nowrap;
+        }
+
+        .nav-tab-btn:hover {
+            color: var(--text-primary);
+        }
+
+        .nav-tab-btn.active {
+            color: var(--color-info);
+            border-bottom-color: var(--color-info);
+            background: linear-gradient(to bottom, transparent, rgba(6, 182, 212, 0.08));
+        }
+
+        .nav-tab-btn.safety-tab {
+            color: var(--color-farm-gold);
+        }
+
+        .nav-tab-btn.safety-tab.active {
+            border-bottom-color: var(--color-farm-gold);
+            background: linear-gradient(to bottom, transparent, rgba(245, 158, 11, 0.08));
+        }
+
+        /* Workspace Container */
+        .workspace {
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 24px;
+            width: 100%;
+        }
+
+        .tab-pane {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .tab-pane.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Rural Safety Alert Banner */
+        .farmer-alert-banner {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(6, 182, 212, 0.08) 100%);
+            border: 1px solid rgba(16, 185, 129, 0.35);
+            border-radius: var(--radius-lg);
+            padding: 20px 24px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+            box-shadow: var(--shadow-card);
+            transition: var(--transition-smooth);
+        }
+
+        .farmer-alert-banner.hazard {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.22) 0%, rgba(245, 158, 11, 0.18) 100%);
+            border-color: rgba(239, 68, 68, 0.6);
+            animation: hazardPulse 1.8s infinite alternate;
+        }
+
+        @keyframes hazardPulse {
+            from { box-shadow: 0 0 20px rgba(239, 68, 68, 0.3); }
+            to { box-shadow: 0 0 40px rgba(239, 68, 68, 0.6); }
+        }
+
+        .alert-left {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+        }
+
+        .alert-circle {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--color-normal);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            box-shadow: 0 0 20px var(--color-normal-glow);
+            flex-shrink: 0;
+            transition: var(--transition-smooth);
+        }
+
+        .farmer-alert-banner.hazard .alert-circle {
+            background: var(--color-danger);
+            box-shadow: 0 0 25px var(--color-danger-glow);
+            animation: pulseIcon 1s infinite;
+        }
+
+        @keyframes pulseIcon {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .alert-tagline {
+            font-size: 0.75rem;
+            font-weight: 800;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+            color: var(--color-normal);
+            margin-bottom: 2px;
+        }
+
+        .farmer-alert-banner.hazard .alert-tagline {
+            color: var(--color-danger);
+        }
+
+        .alert-headline {
+            font-size: 1.55rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            line-height: 1.2;
+        }
+
+        .alert-subtext {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .alert-stats-cluster {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .stat-badge-box {
+            background: var(--bg-glass-elevated);
+            padding: 10px 16px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-subtle);
+            text-align: center;
+            min-width: 110px;
+        }
+
+        .stat-box-label {
+            font-size: 0.68rem;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .stat-box-val {
+            font-family: var(--font-mono);
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: var(--text-primary);
+        }
+
+        /* Hardware Prototype Telemetry & Arduino Bench */
+        .hardware-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .card-panel {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            padding: 22px;
+            box-shadow: var(--shadow-subtle);
+            position: relative;
+        }
+
+        .card-title-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .card-title-bar h2, .card-title-bar h3 {
+            font-size: 1rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Authentic 16x2 I2C LCD Display Twin */
+        .lcd-display-case {
+            background: #064e3b;
+            border: 6px solid #111827;
+            border-radius: 10px;
+            padding: 12px 16px;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.8), 0 4px 15px rgba(0,0,0,0.4);
+            font-family: var(--font-mono);
+            color: #6ee7b7;
+            text-shadow: 0 0 6px rgba(110, 231, 183, 0.7);
+            letter-spacing: 2px;
+            margin-bottom: 16px;
+        }
+
+        .lcd-line {
+            font-size: 1.05rem;
+            font-weight: 700;
+            white-space: pre;
+            line-height: 1.6;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Virtual Arduino Indicator Bar */
+        .arduino-indicators {
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            background: var(--bg-tertiary);
+            padding: 12px;
+            border-radius: var(--radius-md);
+            margin-top: 14px;
+        }
+
+        .indicator-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .led-indicator {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #334155;
+            transition: var(--transition-smooth);
+        }
+
+        .led-indicator.active-green {
+            background: #10b981;
+            box-shadow: 0 0 12px #10b981;
+        }
+
+        .led-indicator.active-red {
+            background: #ef4444;
+            box-shadow: 0 0 14px #ef4444;
+            animation: blinkRed 0.6s infinite;
+        }
+
+        @keyframes blinkRed {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .led-indicator.active-relay {
+            background: #f59e0b;
+            box-shadow: 0 0 12px #f59e0b;
+        }
+
+        /* Phase Voltage & Current Matrix */
+        .sensor-matrix-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .sensor-cell {
+            background: var(--bg-tertiary);
+            border-radius: var(--radius-md);
+            padding: 14px 12px;
+            text-align: center;
+            border: 1px solid var(--border-subtle);
+            transition: var(--transition-smooth);
+        }
+
+        .sensor-cell.faulted {
+            border-color: var(--color-danger);
+            background: rgba(239, 68, 68, 0.12);
+        }
+
+        .cell-phase-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 4px;
+        }
+
+        .cell-current {
+            font-family: var(--font-mono);
+            font-size: 1.45rem;
+            font-weight: 800;
+            margin: 4px 0 2px 0;
+        }
+
+        .cell-voltage {
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        /* Relay Module Card & Trip Action */
+        .relay-status-block {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 18px;
+            background: var(--bg-tertiary);
+            border-radius: var(--radius-md);
+            margin-bottom: 14px;
+        }
+
+        .relay-status-pill {
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            font-weight: 700;
+            padding: 6px 14px;
+            border-radius: 20px;
+        }
+
+        .relay-status-pill.energized {
+            background: rgba(16, 185, 129, 0.18);
+            color: var(--color-normal);
+            border: 1px solid rgba(16, 185, 129, 0.4);
+        }
+
+        .relay-status-pill.tripped {
+            background: rgba(239, 68, 68, 0.22);
+            color: var(--color-danger);
+            border: 1px solid rgba(239, 68, 68, 0.5);
+            animation: blinkRed 1s infinite;
+        }
+
+        /* Rural Feeder Geographic & Tower Map */
+        .rural-map-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow-card);
+        }
+
+        .rural-svg-wrap {
+            width: 100%;
+            min-height: 280px;
+            background: radial-gradient(circle at 50% 50%, #0d1b2a 0%, #060b14 100%);
+            border-radius: var(--radius-md);
+            padding: 18px;
+            border: 1px solid var(--border-subtle);
+            overflow-x: auto;
+        }
+
+        /* Farmer Safety Advisory Cards */
+        .safety-advisory-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .advisory-item-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            padding: 18px;
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            box-shadow: var(--shadow-subtle);
+        }
+
+        .advisory-icon-circle {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--color-farm-gold);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            flex-shrink: 0;
+        }
+
+        .advisory-text h4 {
+            font-size: 0.95rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .advisory-text p {
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+            line-height: 1.45;
+        }
+
+        /* SMS Emergency Dispatch Simulator */
+        .sms-dispatch-card {
+            background: var(--bg-tertiary);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            margin-top: 14px;
+            border: 1px solid var(--border-subtle);
+        }
+
+        .sms-bubble {
+            background: var(--bg-secondary);
+            padding: 12px 14px;
+            border-radius: 10px;
+            font-size: 0.82rem;
+            font-family: var(--font-mono);
+            border-left: 3px solid var(--color-farm-gold);
+            margin-top: 8px;
+        }
+
+        /* Project Cost Table & Presentation Dossier */
+        .project-meta-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .meta-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            padding: 18px;
+        }
+
+        .meta-card h4 {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            color: var(--color-info);
+            margin-bottom: 8px;
+            letter-spacing: 0.5px;
+        }
+
+        table.cost-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+            margin-top: 12px;
+        }
+
+        table.cost-table th, table.cost-table td {
+            padding: 10px 14px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        table.cost-table th {
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+        }
+
+        /* Buttons & Actions */
+        .btn-action {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-primary);
+            padding: 8px 16px;
+            border-radius: var(--radius-sm);
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-action:hover {
+            border-color: var(--border-highlight);
+            transform: translateY(-1px);
+        }
+
+        .btn-action.btn-danger {
+            background: linear-gradient(135deg, #ef4444, #b91c1c);
+            border: none;
+            color: white;
+            box-shadow: 0 4px 14px rgba(239, 68, 68, 0.4);
+        }
+
+        .btn-action.btn-primary {
+            background: linear-gradient(135deg, #0284c7, #2563eb);
+            border: none;
+            color: white;
+            box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
+        }
+
+        .btn-action.btn-warning {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            border: none;
+            color: #000;
+            font-weight: 700;
+        }
+
+        /* Toast Alert Container */
+        .toast-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 400px;
+            pointer-events: none;
+        }
+
+        .toast-alert {
+            pointer-events: auto;
+            background: var(--bg-glass-elevated);
+            backdrop-filter: blur(12px);
+            border-left: 4px solid var(--color-info);
+            border-top: 1px solid var(--border-subtle);
+            border-right: 1px solid var(--border-subtle);
+            border-bottom: 1px solid var(--border-subtle);
+            padding: 14px 18px;
+            border-radius: var(--radius-sm);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            animation: slideInRight 0.3s ease;
+        }
+
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .toast-alert.danger { border-left-color: var(--color-danger); }
+        .toast-alert.warning { border-left-color: var(--color-warning); }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header { padding: 10px 16px; }
+            .brand-subline { display: none; }
+            .workspace { padding: 14px; }
+            .sensor-matrix-grid { grid-template-columns: 1fr; }
+            .institution-strip { font-size: 0.65rem; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Top Institutional Credential Strip -->
+    <div class="institution-strip">
+        <div class="inst-left">
+            <i class="fas fa-graduation-cap" style="color:var(--color-farm-gold)"></i>
+            <span>BABU BANARASI DAS NORTHERN INDIA INSTITUTE OF TECHNOLOGY (BBDNIIT)</span>
+            <span>• Affiliated to AKTU, Lucknow</span>
+        </div>
+        <div class="inst-right">
+            <span><strong>Guide:</strong> Mr. Pradeep Kumar Verma (Asst. Prof, EE)</span>
+            <span><strong>Team:</strong> Ankit Yadav (2300560200004), Shivendra Singh (2300560200032)</span>
+        </div>
+    </div>
+
+    <!-- Main Header -->
+    <header class="header">
+        <div class="brand-cluster">
+            <div class="brand-icon">
+                <i class="fas fa-tower-broadcast"></i>
+            </div>
+            <div class="brand-text">
+                <h1>
+                    VidyutRakshak IoT
+                    <span class="badge-rural"><i class="fas fa-wheat-awn"></i> Rural Safety</span>
+                </h1>
+                <div class="brand-subline">
+                    <span>Transmission Line Fault Detection System Using Arduino (Life Safety Architecture)</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="header-controls">
+            <!-- Mode Switcher -->
+            <div class="mode-toggle-group">
+                <button class="mode-btn active" id="modeLiveBtn" onclick="setDataSourceMode('live')">
+                    <i class="fas fa-satellite-dish"></i> Live IoT
+                </button>
+                <button class="mode-btn" id="modeSimBtn" onclick="setDataSourceMode('sim')">
+                    <i class="fas fa-flask"></i> Simulation
+                </button>
+            </div>
+
+            <!-- Buzzer/Audio Alarm Button -->
+            <button class="utility-btn alarm-on" id="audioToggleBtn" title="Toggle On-site Buzzer Alarm" onclick="toggleAudioAlarm()">
+                <i class="fas fa-bell"></i>
+            </button>
+
+            <!-- Theme Toggle -->
+            <button class="utility-btn" id="themeToggleBtn" title="Toggle Dark/Light Mode" onclick="toggleTheme()">
+                <i class="fas fa-moon"></i>
+            </button>
+
+            <!-- Emergency Relay Trip Button -->
+            <button class="btn-action btn-danger" onclick="manualTripRelay()">
+                <i class="fas fa-power-off"></i> Relay Trip
+            </button>
+
+            <!-- Connection Chip -->
+            <div class="connection-chip" id="connectionBadge">
+                <div class="pulse-dot" id="pulseDot"></div>
+                <span id="connectionLabel">LIVE ARDUINO</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="nav-tabs-wrapper">
+        <button class="nav-tab-btn active" onclick="switchTab('control-room')">
+            <i class="fas fa-desktop"></i> Control Room & Hardware
+        </button>
+        <button class="nav-tab-btn safety-tab" onclick="switchTab('rural-safety')">
+            <i class="fas fa-person-shelter"></i> Farmer & Rural Safety
+        </button>
+        <button class="nav-tab-btn" onclick="switchTab('feeder-map')">
+            <i class="fas fa-map-location-dot"></i> Feeder Geographic Map
+        </button>
+        <button class="nav-tab-btn" onclick="switchTab('waveforms')">
+            <i class="fas fa-wave-square"></i> Waveforms & VI Curves
+        </button>
+        <button class="nav-tab-btn" onclick="switchTab('sandbox')">
+            <i class="fas fa-sliders"></i> Fault Injection Sandbox
+        </button>
+        <button class="nav-tab-btn" onclick="switchTab('academic')">
+            <i class="fas fa-book-open"></i> Project Dossier & Circuit
+        </button>
+    </nav>
+
+    <!-- Main Workspace -->
+    <main class="workspace">
+        <!-- TAB 1: CONTROL ROOM & ARDUINO HARDWARE BENCH -->
+        <div id="tab-control-room" class="tab-pane active">
+            <!-- Farmer Life Safety & Trip Banner -->
+            <div class="farmer-alert-banner" id="farmerAlertBanner">
+                <div class="alert-left">
+                    <div class="alert-circle" id="alertCircle">
+                        <i class="fas fa-shield-halved"></i>
+                    </div>
+                    <div>
+                        <div class="alert-tagline" id="alertTagline">RURAL POWER CORRIDOR SAFE</div>
+                        <div class="alert-headline" id="alertHeadline">FEEDER ENERGIZED • ZERO LEAKAGE DETECTED</div>
+                        <div class="alert-subtext" id="alertSubtext">
+                            <span>Open agricultural fields beneath transmission towers are secure. Livestock & farmers safe.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert-stats-cluster">
+                    <div class="stat-badge-box">
+                        <div class="stat-box-label">Trip Time</div>
+                        <div class="stat-box-val" id="kpiTripTime">&lt; 4.0s</div>
+                    </div>
+                    <div class="stat-badge-box">
+                        <div class="stat-box-label">Fault Distance</div>
+                        <div class="stat-box-val" id="kpiDistance">-- KM</div>
+                    </div>
+                    <div class="stat-badge-box">
+                        <div class="stat-box-label">Prototype Accuracy</div>
+                        <div class="stat-box-val" style="color:var(--color-normal)">98%</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hardware Telemetry & Arduino Digital Twin Grid -->
+            <div class="hardware-grid">
+                <!-- Virtual Arduino Uno & 16x2 LCD Twin -->
+                <div class="card-panel">
+                    <div class="card-title-bar">
+                        <h3><i class="fas fa-microchip" style="color:var(--color-info)"></i> Arduino Uno Digital Twin</h3>
+                        <span style="font-size:0.75rem;color:var(--text-muted);font-family:var(--font-mono)">ATmega328P</span>
+                    </div>
+
+                    <!-- 16x2 I2C Liquid Crystal Display -->
+                    <div class="lcd-display-case">
+                        <div class="lcd-line" id="lcdLine1">FEEDER: NORMAL  </div>
+                        <div class="lcd-line" id="lcdLine2">VR:230V IR:0.18A</div>
+                    </div>
+
+                    <!-- On-Board Hardware Indicators -->
+                    <div class="arduino-indicators">
+                        <div class="indicator-item">
+                            <div class="led-indicator active-green" id="ledHealthy"></div>
+                            <span>NORMAL LED</span>
+                        </div>
+                        <div class="indicator-item">
+                            <div class="led-indicator" id="ledFault"></div>
+                            <span>FAULT LED</span>
+                        </div>
+                        <div class="indicator-item">
+                            <div class="led-indicator active-relay" id="ledRelay"></div>
+                            <span>5V RELAY COIL</span>
+                        </div>
+                        <div class="indicator-item">
+                            <div class="led-indicator" id="ledBuzzer"></div>
+                            <span>BUZZER</span>
+                        </div>
+                    </div>
+
+                    <!-- Sensor Specifications Reference (from slide 6) -->
+                    <div style="margin-top:14px;font-size:0.75rem;color:var(--text-muted);display:flex;justify-content:space-between;border-top:1px solid var(--border-subtle);padding-top:10px;">
+                        <span>Current Sensor: <strong>ACS712 (Hall Effect)</strong></span>
+                        <span>Voltage Sensor: <strong>PT / Resistive Divider</strong></span>
+                    </div>
+                </div>
+
+                <!-- 3-Phase Voltage, Current & Temperature Matrix -->
+                <div class="card-panel">
+                    <div class="card-title-bar">
+                        <h3><i class="fas fa-gauge-high" style="color:var(--color-farm-gold)"></i> Line Parameters Telemetry</h3>
+                        <span style="font-size:0.75rem;color:var(--text-muted)">Sampling Rate: 50Hz</span>
+                    </div>
+
+                    <div class="sensor-matrix-grid">
+                        <!-- Phase Red -->
+                        <div class="sensor-cell" id="cellPhaseRed">
+                            <div style="font-size:0.75rem;font-weight:700;color:var(--phase-red)">
+                                <span class="cell-phase-dot" style="background:var(--phase-red)"></span>PHASE R
+                            </div>
+                            <div class="cell-current" id="valIR" style="color:var(--phase-red)">0.18 A</div>
+                            <div class="cell-voltage" id="valVR">230.2 V</div>
+                        </div>
+
+                        <!-- Phase Yellow -->
+                        <div class="sensor-cell" id="cellPhaseYellow">
+                            <div style="font-size:0.75rem;font-weight:700;color:var(--phase-yellow)">
+                                <span class="cell-phase-dot" style="background:var(--phase-yellow)"></span>PHASE Y
+                            </div>
+                            <div class="cell-current" id="valIY" style="color:var(--phase-yellow)">0.17 A</div>
+                            <div class="cell-voltage" id="valVY">229.8 V</div>
+                        </div>
+
+                        <!-- Phase Blue -->
+                        <div class="sensor-cell" id="cellPhaseBlue">
+                            <div style="font-size:0.75rem;font-weight:700;color:var(--phase-blue)">
+                                <span class="cell-phase-dot" style="background:var(--phase-blue)"></span>PHASE B
+                            </div>
+                            <div class="cell-current" id="valIB" style="color:var(--phase-blue)">0.19 A</div>
+                            <div class="cell-voltage" id="valVB">231.0 V</div>
+                        </div>
+                    </div>
+
+                    <!-- Environmental Temperature Sensor (Slide 8: Fire & Sudden temp change detection) -->
+                    <div style="background:var(--bg-tertiary);border-radius:var(--radius-md);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;">
+                        <div style="display:flex;align-items:center;gap:10px;">
+                            <i class="fas fa-temperature-half" style="color:var(--color-danger);font-size:1.3rem;"></i>
+                            <div>
+                                <div style="font-size:0.75rem;color:var(--text-muted)">Conductor Temperature (Fire Sensor)</div>
+                                <div style="font-size:0.95rem;font-weight:700;" id="valTemp">34.2 °C • Normal Range</div>
+                            </div>
+                        </div>
+                        <span class="badge-rural" style="background:rgba(16,185,129,0.15);color:var(--color-normal);border-color:rgba(16,185,129,0.3)">Nominal</span>
+                    </div>
+                </div>
+
+                <!-- 5V Electromagnetic Relay Protection & Circuit Breaker -->
+                <div class="card-panel">
+                    <div class="card-title-bar">
+                        <h3><i class="fas fa-toggle-on" style="color:var(--color-normal)"></i> Relay & Breaker Status</h3>
+                        <span style="font-size:0.75rem;color:var(--text-muted)">Circuit Isolation</span>
+                    </div>
+
+                    <div class="relay-status-block">
+                        <div>
+                            <div style="font-size:0.8rem;color:var(--text-muted)">5V Relay Module (Trip Coil)</div>
+                            <div style="font-size:1.1rem;font-weight:700;margin-top:2px;" id="relayStatusTitle">ENERGIZED (CLOSED)</div>
+                        </div>
+                        <span class="relay-status-pill energized" id="relayStatusBadge">ARMED</span>
+                    </div>
+
+                    <div style="font-size:0.8rem;color:var(--text-secondary);line-height:1.45;margin-bottom:14px;">
+                        When abnormal current surges or line breakage occurs, the Arduino triggers the relay within <strong>&lt; 4 seconds</strong> to cut power before villagers or cattle can be harmed.
+                    </div>
+
+                    <div style="display:flex;gap:10px;">
+                        <button class="btn-action btn-danger" style="flex:1" onclick="manualTripRelay()">
+                            <i class="fas fa-hand"></i> Trip Feeder
+                        </button>
+                        <button class="btn-action btn-primary" style="flex:1" onclick="resetRelayNormal()">
+                            <i class="fas fa-rotate"></i> Reclose Relay
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 2: FARMER & RURAL SAFETY ADVISORY -->
+        <div id="tab-rural-safety" class="tab-pane">
+            <div class="card-panel" style="margin-bottom:24px;">
+                <div class="card-title-bar">
+                    <h2><i class="fas fa-person-shelter" style="color:var(--color-farm-gold)"></i> Rural Life Protection Architecture</h2>
+                    <span class="badge-rural">Safety First Initiative</span>
+                </div>
+                <p style="color:var(--text-secondary);font-size:0.9rem;margin-bottom:16px;">
+                    In rural feeders, undetected line breaks fall across crop fields, irrigation canals, and tractor routes. This system provides proactive alerts to protect villagers, tractors, and livestock from fatal step-potential shock.
+                </p>
+
+                <div class="safety-advisory-grid">
+                    <div class="advisory-item-card">
+                        <div class="advisory-icon-circle"><i class="fas fa-triangle-exclamation"></i></div>
+                        <div class="advisory-text">
+                            <h4>Prevents Accidental Contact</h4>
+                            <p>Warns farmers to stay away from hazardous zones instead of unknowingly stepping onto energised ground.</p>
+                        </div>
+                    </div>
+
+                    <div class="advisory-item-card">
+                        <div class="advisory-icon-circle"><i class="fas fa-tractor"></i></div>
+                        <div class="advisory-text">
+                            <h4>Machinery & Irrigation Safety</h4>
+                            <p>Protects farmers operating tractors, metal threshers, and irrigation pipe ladders under overhead lines.</p>
+                        </div>
+                    </div>
+
+                    <div class="advisory-item-card">
+                        <div class="advisory-icon-circle"><i class="fas fa-cow"></i></div>
+                        <div class="advisory-text">
+                            <h4>Livestock & Cattle Defense</h4>
+                            <p>Cattle possess high sensitivity to step voltage. Rapid line isolation (&lt;4s) prevents herd electrocution.</p>
+                        </div>
+                    </div>
+
+                    <div class="advisory-item-card">
+                        <div class="advisory-icon-circle"><i class="fas fa-solar-panel"></i></div>
+                        <div class="advisory-text">
+                            <h4>Solar Off-Grid Remote Poles</h4>
+                            <p>Autonomous solar-charged sensor nodes on remote towers ensure 24/7 protection without relying on grid power.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Emergency GSM / SMS Dispatch Simulator -->
+                <div class="sms-dispatch-card">
+                    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+                        <span style="font-weight:700;font-size:0.85rem;"><i class="fas fa-comment-sms" style="color:var(--color-info);margin-right:6px;"></i> IoT GSM Alert Dispatch (SIM800 / Mobile Broadcast)</span>
+                        <span style="font-size:0.75rem;color:var(--text-muted)">Automatic dispatch to Grid Substation & Village Head</span>
+                    </div>
+                    <div class="sms-bubble" id="smsBubble">
+                        [SMS DISPATCH] PRIORITY ALERT: All rural feeder sections nominal. Feeder 11kV active. No line breakage reported. Area secure.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: FEEDER GEOGRAPHIC & TOWER MAP -->
+        <div id="tab-feeder-map" class="tab-pane">
+            <div class="rural-map-card">
+                <div class="card-title-bar">
+                    <h2><i class="fas fa-map-location-dot" style="color:var(--color-info)"></i> Rural Feeder Geographic Profile</h2>
+                    <span style="font-size:0.8rem;color:var(--text-muted)">Feeder Length: 10.0 km • 4 Intermediate Towers</span>
+                </div>
+
+                <div class="rural-svg-wrap">
+                    <svg id="ruralSvg" viewBox="0 0 1000 280" style="width: 100%; height: auto; display: block;">
+                        <!-- Ground / Agricultural Fields Background -->
+                        <rect x="0" y="190" width="1000" height="90" fill="#0f291e" opacity="0.6" />
+                        <line x1="0" y1="190" x2="1000" y2="190" stroke="#10b981" stroke-width="1.5" stroke-dasharray="6,4" />
+                        <text x="30" y="215" fill="#34d399" font-size="10" font-family="sans-serif">🌾 Agricultural Wheat Field (Sector 1)</text>
+                        <text x="380" y="215" fill="#fbbf24" font-size="10" font-family="sans-serif">🚜 Village Pathway & Irrigation Canal</text>
+                        <text x="760" y="215" fill="#34d399" font-size="10" font-family="sans-serif">🌾 Open Grazing Field (Sector 2)</text>
+
+                        <!-- Substation 1 (Grid Source) -->
+                        <rect x="20" y="80" width="80" height="110" rx="8" fill="#1e293b" stroke="#38bdf8" stroke-width="2" />
+                        <text x="60" y="115" fill="#38bdf8" font-size="11" font-weight="bold" text-anchor="middle">SUBSTATION</text>
+                        <text x="60" y="135" fill="#94a3b8" font-size="9" text-anchor="middle">11kV / 400V</text>
+                        <text x="60" y="155" fill="#10b981" font-size="9" font-weight="bold" text-anchor="middle">ARDUINO CTRL</text>
+
+                        <!-- Load End (Village Transformer) -->
+                        <rect x="900" y="80" width="80" height="110" rx="8" fill="#1e293b" stroke="#f59e0b" stroke-width="2" />
+                        <text x="940" y="115" fill="#f59e0b" font-size="11" font-weight="bold" text-anchor="middle">VILLAGE LOAD</text>
+                        <text x="940" y="135" fill="#94a3b8" font-size="9" text-anchor="middle">TUBE WELLS</text>
+                        <text x="940" y="155" fill="#10b981" font-size="9" font-weight="bold" text-anchor="middle">DISTRIBUTION</text>
+
+                        <!-- Overhead Transmission Conductors -->
+                        <path id="wireR" d="M 100 100 Q 500 120 900 100" fill="none" stroke="var(--phase-red)" stroke-width="2.5" />
+                        <path id="wireY" d="M 100 120 Q 500 140 900 120" fill="none" stroke="var(--phase-yellow)" stroke-width="2.5" />
+                        <path id="wireB" d="M 100 140 Q 500 160 900 140" fill="none" stroke="var(--phase-blue)" stroke-width="2.5" />
+
+                        <!-- Pylons / Towers -->
+                        <g transform="translate(280, 70)">
+                            <polygon points="0,120 10,0 20,0 30,120" fill="#334155" stroke="#64748b" stroke-width="1.5" />
+                            <line x1="-12" y1="40" x2="42" y2="40" stroke="#94a3b8" stroke-width="2" />
+                            <text x="15" y="140" fill="#94a3b8" font-size="9" text-anchor="middle" font-family="monospace">POLE 1 (2.5 km)</text>
+                        </g>
+
+                        <g transform="translate(500, 70)">
+                            <polygon points="0,120 10,0 20,0 30,120" fill="#334155" stroke="#64748b" stroke-width="1.5" />
+                            <line x1="-12" y1="40" x2="42" y2="40" stroke="#94a3b8" stroke-width="2" />
+                            <text x="15" y="140" fill="#94a3b8" font-size="9" text-anchor="middle" font-family="monospace">POLE 2 (5.0 km)</text>
+                        </g>
+
+                        <g transform="translate(720, 70)">
+                            <polygon points="0,120 10,0 20,0 30,120" fill="#334155" stroke="#64748b" stroke-width="1.5" />
+                            <line x1="-12" y1="40" x2="42" y2="40" stroke="#94a3b8" stroke-width="2" />
+                            <text x="15" y="140" fill="#94a3b8" font-size="9" text-anchor="middle" font-family="monospace">POLE 3 (7.5 km)</text>
+                        </g>
+
+                        <!-- Dynamic Fault Marker with Fallen Wire Arc -->
+                        <g id="ruralFaultMarker" style="display: none; transition: transform 0.4s ease;">
+                            <!-- Hazard danger circle on ground -->
+                            <ellipse cx="0" cy="190" rx="35" ry="12" fill="rgba(239, 68, 68, 0.4)" stroke="#ef4444" stroke-width="2">
+                                <animate attributeName="rx" values="25;45;25" dur="1.2s" repeatCount="indefinite" />
+                            </ellipse>
+                            <!-- Fallen wire down to earth -->
+                            <path d="M 0 110 L 0 190" stroke="#ef4444" stroke-width="3" stroke-dasharray="4,2" />
+                            <!-- Spark blast -->
+                            <polygon points="0,175 -8,190 0,185 8,190" fill="#fbbf24" />
+                            <!-- Warning Banner -->
+                            <rect x="-60" y="45" width="120" height="30" rx="15" fill="#ef4444" />
+                            <text x="0" y="65" fill="#ffffff" font-size="11" font-weight="bold" text-anchor="middle">⚠️ WIRE DOWN</text>
+                            <text id="ruralDistText" x="0" y="38" fill="#ef4444" font-size="11" font-weight="bold" text-anchor="middle" font-family="monospace">4.2 KM</text>
+                        </g>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 4: WAVEFORMS & VI DYNAMICS -->
+        <div id="tab-waveforms" class="tab-pane">
+            <div class="hardware-grid">
+                <div class="card-panel">
+                    <div class="card-title-bar">
+                        <h3><i class="fas fa-chart-line" style="color:var(--color-info)"></i> Real-Time Phase Currents (ACS712 Stream)</h3>
+                        <span style="font-size:0.75rem;color:var(--text-muted)">Window: 30 Samples</span>
+                    </div>
+                    <div style="position:relative;height:280px;">
+                        <canvas id="currentStreamChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="card-panel">
+                    <div class="card-title-bar">
+                        <h3><i class="fas fa-bolt" style="color:var(--color-farm-gold)"></i> Working Principle: Current Surge vs Voltage Sag</h3>
+                        <span style="font-size:0.75rem;color:var(--text-muted)">Fault Dynamics</span>
+                    </div>
+                    <div style="position:relative;height:280px;">
+                        <canvas id="viDynamicsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 5: FAULT INJECTION SANDBOX & TESTING BENCH -->
+        <div id="tab-sandbox" class="tab-pane">
+            <div class="card-panel" style="border-color:var(--color-warning);">
+                <div class="card-title-bar">
+                    <h2><i class="fas fa-flask" style="color:var(--color-warning)"></i> Interactive Fault Injection Testbench</h2>
+                    <button class="btn-action btn-danger" onclick="injectFault('normal')">
+                        <i class="fas fa-broom"></i> Reset to Normal
+                    </button>
+                </div>
+                <p style="color:var(--text-secondary);font-size:0.85rem;margin-bottom:16px;">
+                    Test the prototype's response under simulated abnormal conditions (Overcurrent, L-G fault, L-L fault, Wire Drop).
+                </p>
+
+                <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(200px, 1fr));gap:12px;margin-bottom:20px;">
+                    <button class="btn-action" style="padding:14px;flex-direction:column;align-items:flex-start;" onclick="injectFault('lg')">
+                        <span style="color:var(--color-danger);font-weight:700;"><i class="fas fa-bolt"></i> Single Line-to-Ground</span>
+                        <small style="color:var(--text-muted)">Phase R wire down into field (L-G)</small>
+                    </button>
+
+                    <button class="btn-action" style="padding:14px;flex-direction:column;align-items:flex-start;" onclick="injectFault('ll')">
+                        <span style="color:var(--color-warning);font-weight:700;"><i class="fas fa-bolt"></i> Line-to-Line Fault</span>
+                        <small style="color:var(--text-muted)">Phase Y & B wind clash (L-L)</small>
+                    </button>
+
+                    <button class="btn-action" style="padding:14px;flex-direction:column;align-items:flex-start;" onclick="injectFault('three')">
+                        <span style="color:#f43f5e;font-weight:700;"><i class="fas fa-triangle-exclamation"></i> 3-Phase Symmetrical</span>
+                        <small style="color:var(--text-muted)">Severe tree branch fall on line</small>
+                    </button>
+
+                    <button class="btn-action" style="padding:14px;flex-direction:column;align-items:flex-start;" onclick="injectFault('overheat')">
+                        <span style="color:#ea580c;font-weight:700;"><i class="fas fa-fire"></i> Overheating / Fire</span>
+                        <small style="color:var(--text-muted)">Temp sensor trigger (&gt;75°C)</small>
+                    </button>
+                </div>
+
+                <!-- Interactive Telemetry Sliders -->
+                <div style="background:var(--bg-tertiary);border-radius:var(--radius-md);padding:18px;display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:16px;">
+                    <div>
+                        <label style="font-size:0.8rem;font-weight:600;display:flex;justify-content:space-between;">
+                            Phase R Current (A): <span id="lblSimR">0.18 A</span>
+                        </label>
+                        <input type="range" id="simRangeR" min="0" max="2.0" step="0.01" value="0.18" style="width:100%" oninput="onSimSliderInput()">
+                    </div>
+
+                    <div>
+                        <label style="font-size:0.8rem;font-weight:600;display:flex;justify-content:space-between;">
+                            Phase R Voltage (V): <span id="lblSimVR">230 V</span>
+                        </label>
+                        <input type="range" id="simRangeVR" min="0" max="250" step="1" value="230" style="width:100%" oninput="onSimSliderInput()">
+                    </div>
+
+                    <div>
+                        <label style="font-size:0.8rem;font-weight:600;display:flex;justify-content:space-between;">
+                            Fault Distance (km): <span id="lblSimDist">4.2 km</span>
+                        </label>
+                        <input type="range" id="simRangeDist" min="0.5" max="9.5" step="0.1" value="4.2" style="width:100%" oninput="onSimSliderInput()">
+                    </div>
+
+                    <div>
+                        <label style="font-size:0.8rem;font-weight:600;display:flex;justify-content:space-between;">
+                            Line Temp (°C): <span id="lblSimTemp">34 °C</span>
+                        </label>
+                        <input type="range" id="simRangeTemp" min="20" max="100" step="1" value="34" style="width:100%" oninput="onSimSliderInput()">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 6: PROJECT DOSSIER, CIRCUIT & BOM COST -->
+        <div id="tab-academic" class="tab-pane">
+            <div class="project-meta-grid">
+                <div class="meta-card">
+                    <h4>Department & University</h4>
+                    <p><strong>Department of Electrical Engineering</strong></p>
+                    <p style="font-size:0.85rem;color:var(--text-secondary)">Babu Banarasi Das Northern India Institute of Technology (BBDNIIT)</p>
+                    <p style="font-size:0.85rem;color:var(--text-secondary)">Affiliated to Dr. A.P.J. Abdul Kalam Technical University, Lucknow (AKTU)</p>
+                </div>
+
+                <div class="meta-card">
+                    <h4>Project Supervision</h4>
+                    <p><strong>Under Guidance of:</strong></p>
+                    <p style="font-size:0.9rem;">Mr. Pradeep Kumar Verma</p>
+                    <p style="font-size:0.8rem;color:var(--text-secondary)">Assistant Professor, Dept. of Electrical Engineering</p>
+                </div>
+
+                <div class="meta-card">
+                    <h4>Project Team</h4>
+                    <p><strong>Ankit Yadav</strong> (Roll: 2300560200004)</p>
+                    <p><strong>Shivendra Singh</strong> (Roll: 2300560200032)</p>
+                    <p style="font-size:0.8rem;color:var(--color-farm-gold);margin-top:4px;">B.Tech Electrical Engineering</p>
+                </div>
+
+                <div class="meta-card">
+                    <h4>Tested Results (Slide 10)</h4>
+                    <p>Relay Trip Speed: <strong>&lt; 4 seconds</strong></p>
+                    <p>Detection Accuracy: <strong>~98%</strong> across trials</p>
+                    <p>Fault Classifications: <strong>3/3 Identified</strong></p>
+                </div>
+            </div>
+
+            <!-- Components Used & Approx Cost Breakdown (from Slide 6) -->
+            <div class="card-panel">
+                <div class="card-title-bar">
+                    <h3><i class="fas fa-coins" style="color:var(--color-farm-gold)"></i> Components Used & Approximate Cost Breakdown</h3>
+                    <span class="badge-rural">Budget: ₹1,520 - ₹2,050</span>
+                </div>
+
+                <table class="cost-table">
+                    <thead>
+                        <tr>
+                            <th>Component</th>
+                            <th>Function in System</th>
+                            <th>Approx. Cost (INR)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Arduino Uno</strong></td>
+                            <td>Main controller: continuously monitors electrical parameters, processes data, triggers trip</td>
+                            <td>₹450 - ₹600</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Current Sensor (ACS712)</strong></td>
+                            <td>Measures line current for overcurrent & short-circuit detection</td>
+                            <td>₹120 - ₹150</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Voltage Sensor (PT/Divider)</strong></td>
+                            <td>Measures line voltage to detect breaks/sags</td>
+                            <td>₹100 - ₹150</td>
+                        </tr>
+                        <tr>
+                            <td><strong>GSM / IoT Module</strong></td>
+                            <td>Sends instant IoT alert to mobile dashboard & SMS to field staff</td>
+                            <td>₹350 - ₹450</td>
+                        </tr>
+                        <tr>
+                            <td><strong>5V Relay Module</strong></td>
+                            <td>Trips and isolates the faulty line section automatically</td>
+                            <td>₹60 - ₹90</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Buzzer + Indicator (LEDs)</strong></td>
+                            <td>On-site audible & visible warning for nearby villagers</td>
+                            <td>₹40 - ₹60</td>
+                        </tr>
+                        <tr>
+                            <td><strong>PCB, Wires, Enclosures</strong></td>
+                            <td>Hardware assembly, wiring and safe outdoor housing</td>
+                            <td>₹250 - ₹350</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Regulated Power Supply</strong></td>
+                            <td>5V DC supply for circuit operation</td>
+                            <td>₹150 - ₹200</td>
+                        </tr>
+                        <tr style="background:var(--bg-tertiary);font-weight:700;">
+                            <td colspan="2">TOTAL PROTOTYPE COST</td>
+                            <td style="color:var(--color-normal)">₹1,520 ~ ₹2,050</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+        // ==========================================
+        // 1. STATE & CONFIG
+        // ==========================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyCG-Sn1tAWKddEwUUgwyzCMNbF9SpHX3eg",
+            authDomain: "transmission-99b69.firebaseapp.com",
+            databaseURL: "https://transmission-99b69-default-rtdb.firebaseio.com",
+            projectId: "transmission-99b69",
+            storageBucket: "transmission-99b69.firebasestorage.app",
+            messagingSenderId: "477393413547",
+            appId: "1:477393413547:web:d589ec804c5edda8439eee"
+        };
+
+        let state = {
+            dataSource: 'live',
+            audioEnabled: true,
+            relayTripped: false,
+            currentData: null,
+            telemetry: {
+                IR: 0.18, IY: 0.17, IB: 0.19,
+                VR: 230, VY: 230, VB: 230,
+                temp: 34.2,
+                faultType: 'NORMAL',
+                faultCode: 1,
+                distance: 0,
+                isFallenWire: false
+            }
+        };
+
+        // Synthesizer Audio Context for On-Site Arduino Buzzer
+        let audioCtx = null;
+        function getAudioContext() {
+            if (!audioCtx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (AudioContext) audioCtx = new AudioContext();
+            }
+            if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+            return audioCtx;
+        }
+
+        function playBuzzerBeep(isFault) {
+            if (!state.audioEnabled) return;
+            try {
+                const ctx = getAudioContext();
+                if (!ctx) return;
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+
+                if (isFault) {
+                    osc.type = 'square'; // Buzzer sound
+                    osc.frequency.setValueAtTime(2400, ctx.currentTime);
+                    gain.gain.setValueAtTime(0.18, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.35);
+                    osc.start();
+                    osc.stop(ctx.currentTime + 0.36);
+                } else {
+                    // Quick relay click
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(1000, ctx.currentTime);
+                    gain.gain.setValueAtTime(0.08, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.08);
+                    osc.start();
+                    osc.stop(ctx.currentTime + 0.09);
+                }
+            } catch (e) {
+                console.warn(e);
+            }
+        }
+
+        // ==========================================
+        // 2. FIREBASE REALTIME LISTENER
+        // ==========================================
+        try {
+            firebase.initializeApp(firebaseConfig);
+            const database = firebase.database();
+            database.ref('/').on('value', (snapshot) => {
+                if (state.dataSource === 'live') {
+                    const data = snapshot.val();
+                    if (data) {
+                        state.currentData = data;
+                        parseFirebaseTelemetry(data);
+                        updateConnectionIndicator(true, 'LIVE ARDUINO');
+                    }
+                }
+            }, (err) => {
+                if (state.dataSource === 'live') updateConnectionIndicator(false, 'OFFLINE / STANDBY');
+            });
+        } catch (e) {
+            console.error("Firebase init error:", e);
+        }
+
+        // Initialize default sample data immediately so interface is 100% active
+        setTimeout(() => {
+            if (!state.currentData) {
+                const defaultSample = {
+                    fault: { type: 1, distance: 0 },
+                    sensors: { current: { red: 0.18, yellow: 0.17, blue: 0.19, neutral: 0.02 } },
+                    affected: { red: false, yellow: false, blue: false }
+                };
+                state.currentData = defaultSample;
+                parseFirebaseTelemetry(defaultSample);
+            }
+        }, 800);
+
+        function parseFirebaseTelemetry(data) {
+            const fault = data.fault || { type: 1, distance: 0 };
+            const sensors = data.sensors || { current: {} };
+            const cur = sensors.current || {};
+
+            state.telemetry.IR = cur.red || 0.18;
+            state.telemetry.IY = cur.yellow || 0.17;
+            state.telemetry.IB = cur.blue || 0.19;
+            state.telemetry.distance = fault.distance || 0;
+            state.telemetry.faultCode = fault.type || 1;
+
+            const FAULT_LABELS = ['', 'NORMAL', '3-PHASE SHORT', 'DOUBLE LINE-GND', 'LINE-LINE FAULT', 'SINGLE LINE-GND (FALLEN WIRE)'];
+            state.telemetry.faultType = FAULT_LABELS[fault.type] || 'NORMAL';
+            state.telemetry.isFallenWire = fault.type === 5 || fault.type === 3;
+
+            // Voltage calculation based on working principle:
+            // "When a fault occurs, current increases abnormally and voltage drops in the affected phase"
+            state.telemetry.VR = state.telemetry.IR > 0.5 ? 42 : 230;
+            state.telemetry.VY = state.telemetry.IY > 0.5 ? 54 : 229;
+            state.telemetry.VB = state.telemetry.IB > 0.5 ? 48 : 231;
+
+            renderAllTelemetry();
+        }
+
+        // ==========================================
+        // 3. UI RENDERING & ARDUINO TWIN
+        // ==========================================
+        function renderAllTelemetry() {
+            const t = state.telemetry;
+            const isFault = t.faultCode > 1 || state.relayTripped;
+
+            // 1. Farmer Alert Banner
+            const banner = document.getElementById('farmerAlertBanner');
+            const alertCircle = document.getElementById('alertCircle');
+            const alertTagline = document.getElementById('alertTagline');
+            const alertHeadline = document.getElementById('alertHeadline');
+            const alertSubtext = document.getElementById('alertSubtext');
+            const kpiDist = document.getElementById('kpiDistance');
+
+            if (isFault) {
+                banner.className = 'farmer-alert-banner hazard';
+                alertCircle.innerHTML = '<i class="fas fa-triangle-exclamation"></i>';
+                alertTagline.innerHTML = '⚠️ LIFE SAFETY HAZARD: CONDUCTOR FAULT DETECTED';
+                alertHeadline.innerHTML = `${t.faultType} • SECTION ISOLATED &lt; 4.0s`;
+                alertSubtext.innerHTML = `<strong>DANGER FOR FARMERS:</strong> Potential fallen wire in agricultural field at <strong>${t.distance.toFixed(1)} km</strong> from substation. Stay clear of open ground!`;
+                kpiDist.innerHTML = `${t.distance.toFixed(1)} KM`;
+                playBuzzerBeep(true);
+            } else {
+                banner.className = 'farmer-alert-banner';
+                alertCircle.innerHTML = '<i class="fas fa-shield-halved"></i>';
+                alertTagline.innerHTML = 'RURAL POWER CORRIDOR SAFE';
+                alertHeadline.innerHTML = 'FEEDER ENERGIZED • ZERO LEAKAGE DETECTED';
+                alertSubtext.innerHTML = 'Open agricultural fields beneath transmission towers are secure. Livestock & farmers safe.';
+                kpiDist.innerHTML = 'NORMAL';
+            }
+
+            // 2. 16x2 LCD Twin Display
+            const lcd1 = document.getElementById('lcdLine1');
+            const lcd2 = document.getElementById('lcdLine2');
+            if (isFault) {
+                lcd1.innerText = (t.faultType.substring(0, 14) + ' FAULT!').substring(0, 16);
+                lcd2.innerText = `TRIP <4s D:${t.distance.toFixed(1)}km`.padEnd(16, ' ');
+            } else {
+                lcd1.innerText = 'FEEDER: NORMAL  ';
+                lcd2.innerText = `VR:${Math.round(t.VR)}V IR:${t.IR.toFixed(2)}A`.padEnd(16, ' ');
+            }
+
+            // 3. Arduino LEDs & Buzzer indicators
+            document.getElementById('ledHealthy').className = isFault ? 'led-indicator' : 'led-indicator active-green';
+            document.getElementById('ledFault').className = isFault ? 'led-indicator active-red' : 'led-indicator';
+            document.getElementById('ledBuzzer').className = isFault ? 'led-indicator active-red' : 'led-indicator';
+            document.getElementById('ledRelay').className = state.relayTripped ? 'led-indicator' : 'led-indicator active-relay';
+
+            // 4. Matrix Readings
+            document.getElementById('valIR').innerText = t.IR.toFixed(2) + ' A';
+            document.getElementById('valIY').innerText = t.IY.toFixed(2) + ' A';
+            document.getElementById('valIB').innerText = t.IB.toFixed(2) + ' A';
+
+            document.getElementById('valVR').innerText = t.VR.toFixed(1) + ' V';
+            document.getElementById('valVY').innerText = t.VY.toFixed(1) + ' V';
+            document.getElementById('valVB').innerText = t.VB.toFixed(1) + ' V';
+
+            document.getElementById('cellPhaseRed').className = t.IR > 0.5 ? 'sensor-cell faulted' : 'sensor-cell';
+            document.getElementById('cellPhaseYellow').className = t.IY > 0.5 ? 'sensor-cell faulted' : 'sensor-cell';
+            document.getElementById('cellPhaseBlue').className = t.IB > 0.5 ? 'sensor-cell faulted' : 'sensor-cell';
+
+            // 5. Relay Status Card
+            const relayTitle = document.getElementById('relayStatusTitle');
+            const relayBadge = document.getElementById('relayStatusBadge');
+            if (state.relayTripped || isFault) {
+                relayTitle.innerText = 'TRIPPED (ISOLATED)';
+                relayTitle.style.color = 'var(--color-danger)';
+                relayBadge.className = 'relay-status-pill tripped';
+                relayBadge.innerText = 'TRIPPED (<4S)';
+            } else {
+                relayTitle.innerText = 'ENERGIZED (CLOSED)';
+                relayTitle.style.color = 'var(--color-normal)';
+                relayBadge.className = 'relay-status-pill energized';
+                relayBadge.innerText = 'ARMED';
+            }
+
+            // 6. SVG Map Update
+            updateRuralMapSvg(t.distance, isFault);
+
+            // 7. SMS Broadcast Message update
+            const sms = document.getElementById('smsBubble');
+            if (isFault) {
+                sms.innerHTML = `[GSM SMS DISPATCH] EMERGENCY ALERT: ${t.faultType} detected at Feeder Km ${t.distance.toFixed(1)}. Power automatically cut off in &lt;4 sec by Arduino Relay. Linemen dispatched. Farmers stay away from Sector 2 field!`;
+            } else {
+                sms.innerHTML = `[SMS DISPATCH] PRIORITY ALERT: All rural feeder sections nominal. Feeder 11kV active. No line breakage reported. Area secure.`;
+            }
+
+            // 8. Stream charts
+            pushChartData(t);
+        }
+
+        function updateRuralMapSvg(dist, isFault) {
+            const marker = document.getElementById('ruralFaultMarker');
+            const txt = document.getElementById('ruralDistText');
+            if (isFault && dist > 0 && dist <= 10) {
+                const x = 100 + ((dist / 10) * 800);
+                marker.setAttribute('transform', `translate(${x}, 0)`);
+                marker.style.display = 'block';
+                txt.textContent = `${dist.toFixed(1)} KM`;
+                document.getElementById('wireR').setAttribute('stroke', '#ef4444');
+            } else {
+                marker.style.display = 'none';
+                document.getElementById('wireR').setAttribute('stroke', 'var(--phase-red)');
+            }
+        }
+
+        // ==========================================
+        // 4. CHART.JS INITIALIZATION
+        // ==========================================
+        let currentChart = null;
+        let viChart = null;
+
+        function initCharts() {
+            const ctx1 = document.getElementById('currentStreamChart')?.getContext('2d');
+            if (ctx1) {
+                currentChart = new Chart(ctx1, {
+                    type: 'line',
+                    data: {
+                        labels: [],
+                        datasets: [
+                            { label: 'IR (Phase A)', borderColor: '#f43f5e', data: [], tension: 0.35, pointRadius: 0 },
+                            { label: 'IY (Phase B)', borderColor: '#eab308', data: [], tension: 0.35, pointRadius: 0 },
+                            { label: 'IB (Phase C)', borderColor: '#38bdf8', data: [], tension: 0.35, pointRadius: 0 }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        animation: { duration: 0 },
+                        scales: {
+                            x: { ticks: { color: '#64748b' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                            y: { beginAtZero: true, suggestedMax: 1.5, ticks: { color: '#64748b' } }
+                        },
+                        plugins: { legend: { labels: { color: '#94a3b8' } } }
+                    }
+                });
+            }
+
+            const ctx2 = document.getElementById('viDynamicsChart')?.getContext('2d');
+            if (ctx2) {
+                viChart = new Chart(ctx2, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Current Surge (A)', 'Voltage Drop (V / 100)'],
+                        datasets: [
+                            {
+                                label: 'Healthy State',
+                                backgroundColor: 'rgba(16, 185, 129, 0.7)',
+                                data: [0.18, 2.3]
+                            },
+                            {
+                                label: 'Fault State (L-G / L-L)',
+                                backgroundColor: 'rgba(239, 68, 68, 0.7)',
+                                data: [1.25, 0.45]
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: { ticks: { color: '#94a3b8' } },
+                            y: { beginAtZero: true, suggestedMax: 2.5, ticks: { color: '#64748b' } }
+                        },
+                        plugins: { legend: { labels: { color: '#94a3b8' } } }
+                    }
+                });
+            }
+        }
+
+        function pushChartData(t) {
+            if (!currentChart) return;
+            const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            if (currentChart.data.labels.length > 25) {
+                currentChart.data.labels.shift();
+                currentChart.data.datasets.forEach(ds => ds.data.shift());
+            }
+            currentChart.data.labels.push(now);
+            currentChart.data.datasets[0].data.push(t.IR);
+            currentChart.data.datasets[1].data.push(t.IY);
+            currentChart.data.datasets[2].data.push(t.IB);
+            currentChart.update();
+        }
+
+        // ==========================================
+        // 5. SIMULATION & TESTING SANDBOX
+        // ==========================================
+        function setDataSourceMode(mode) {
+            state.dataSource = mode;
+            const liveBtn = document.getElementById('modeLiveBtn');
+            const simBtn = document.getElementById('modeSimBtn');
+            const dot = document.getElementById('pulseDot');
+
+            if (mode === 'sim') {
+                liveBtn.classList.remove('active');
+                simBtn.classList.add('active', 'sim-active');
+                dot.className = 'pulse-dot sim';
+                updateConnectionIndicator(true, 'SIMULATION SANDBOX');
+                showToast('Simulation Testbench Activated', 'Hardware sliders and test presets are now active.', 'warning');
+            } else {
+                simBtn.classList.remove('active', 'sim-active');
+                liveBtn.classList.add('active');
+                dot.className = 'pulse-dot';
+                updateConnectionIndicator(true, 'LIVE ARDUINO');
+                showToast('Live IoT Stream Active', 'Listening for real-time Firebase telemetry.', 'info');
+            }
+        }
+
+        function injectFault(type) {
+            setDataSourceMode('sim');
+            state.relayTripped = false;
+
+            if (type === 'normal') {
+                state.telemetry = {
+                    IR: 0.18, IY: 0.17, IB: 0.19,
+                    VR: 230, VY: 230, VB: 230,
+                    temp: 34.2, faultType: 'NORMAL', faultCode: 1,
+                    distance: 0, isFallenWire: false
+                };
+                showToast('Feeder Restored', 'Protective relay reclosed. Feeder healthy.', 'info');
+            } else if (type === 'lg') {
+                state.telemetry = {
+                    IR: 1.15, IY: 0.17, IB: 0.19,
+                    VR: 38, VY: 230, VB: 230,
+                    temp: 36.5, faultType: 'SINGLE LINE-GND (FALLEN WIRE)', faultCode: 5,
+                    distance: 4.8, isFallenWire: true
+                };
+                showToast('CRITICAL: Fallen Wire in Field (L-G)', 'Phase A fallen. Arduino trip coil activated in <4s.', 'danger');
+            } else if (type === 'll') {
+                state.telemetry = {
+                    IR: 0.18, IY: 0.95, IB: 0.92,
+                    VR: 230, VY: 52, VB: 50,
+                    temp: 42.0, faultType: 'LINE-TO-LINE FAULT', faultCode: 4,
+                    distance: 6.2, isFallenWire: false
+                };
+                showToast('Line-to-Line Clash (Phase Y-B)', 'Conductors contacted due to high wind.', 'warning');
+            } else if (type === 'three') {
+                state.telemetry = {
+                    IR: 1.45, IY: 1.48, IB: 1.42,
+                    VR: 25, VY: 28, VB: 24,
+                    temp: 58.0, faultType: '3-PHASE SHORT CIRCUIT', faultCode: 2,
+                    distance: 3.2, isFallenWire: true
+                };
+                showToast('Severe 3-Phase Symmetrical Fault', 'Entire feeder section isolated immediately.', 'danger');
+            } else if (type === 'overheat') {
+                state.telemetry.temp = 86.4;
+                showToast('Fire & Temperature Alert', 'Conductor temperature exceeded 80°C threshold.', 'danger');
+            }
+
+            renderAllTelemetry();
+        }
+
+        function onSimSliderInput() {
+            setDataSourceMode('sim');
+            const r = parseFloat(document.getElementById('simRangeR').value);
+            const vr = parseFloat(document.getElementById('simRangeVR').value);
+            const dist = parseFloat(document.getElementById('simRangeDist').value);
+            const temp = parseFloat(document.getElementById('simRangeTemp').value);
+
+            document.getElementById('lblSimR').innerText = r.toFixed(2) + ' A';
+            document.getElementById('lblSimVR').innerText = vr.toFixed(0) + ' V';
+            document.getElementById('lblSimDist').innerText = dist.toFixed(1) + ' km';
+            document.getElementById('lblSimTemp').innerText = temp.toFixed(0) + ' °C';
+
+            state.telemetry.IR = r;
+            state.telemetry.VR = vr;
+            state.telemetry.distance = dist;
+            state.telemetry.temp = temp;
+            state.telemetry.faultCode = (r > 0.5 || vr < 100) ? 5 : 1;
+            state.telemetry.faultType = (r > 0.5 || vr < 100) ? 'SINGLE LINE-GND (L-G)' : 'NORMAL';
+
+            renderAllTelemetry();
+        }
+
+        function manualTripRelay() {
+            state.relayTripped = true;
+            playBuzzerBeep(true);
+            renderAllTelemetry();
+            showToast('Manual Trip Triggered', '5V Relay coil de-energized. Line power cut off.', 'danger');
+        }
+
+        function resetRelayNormal() {
+            state.relayTripped = false;
+            injectFault('normal');
+            playBuzzerBeep(false);
+            showToast('Relay Reclosed', 'Feeder re-energized successfully.', 'info');
+        }
+
+        // ==========================================
+        // 6. NAVIGATION & UTILITIES
+        // ==========================================
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-tab-btn').forEach(b => b.classList.remove('active'));
+
+            const target = document.getElementById('tab-' + tabId);
+            if (target) target.classList.add('active');
+
+            const btn = Array.from(document.querySelectorAll('.nav-tab-btn')).find(b => b.getAttribute('onclick')?.includes(tabId));
+            if (btn) btn.classList.add('active');
+
+            if (tabId === 'waveforms' && currentChart) {
+                setTimeout(() => {
+                    currentChart.resize();
+                    if (viChart) viChart.resize();
+                }, 100);
+            }
+        }
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            const cur = html.getAttribute('data-theme');
+            const target = cur === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', target);
+            document.querySelector('#themeToggleBtn i').className = target === 'dark' ? 'fas fa-moon' : 'fas fa-sun';
+        }
+
+        function toggleAudioAlarm() {
+            state.audioEnabled = !state.audioEnabled;
+            const btn = document.getElementById('audioToggleBtn');
+            if (state.audioEnabled) {
+                btn.className = 'utility-btn alarm-on';
+                btn.innerHTML = '<i class="fas fa-bell"></i>';
+                showToast('Buzzer Sound Active', 'On-site alarm will sound on fault.', 'info');
+                playBuzzerBeep(false);
+            } else {
+                btn.className = 'utility-btn';
+                btn.innerHTML = '<i class="fas fa-bell-slash"></i>';
+                showToast('Buzzer Muted', 'Visual alerts remain active.', 'warning');
+            }
+        }
+
+        function updateConnectionIndicator(connected, text) {
+            const dot = document.getElementById('pulseDot');
+            const lbl = document.getElementById('connectionLabel');
+            lbl.innerText = text;
+            if (connected) {
+                dot.className = state.dataSource === 'sim' ? 'pulse-dot sim' : 'pulse-dot';
+            } else {
+                dot.className = 'pulse-dot danger';
+            }
+        }
+
+        function showToast(title, msg, type = 'info') {
+            const cont = document.getElementById('toastContainer');
+            if (!cont) return;
+            const t = document.createElement('div');
+            t.className = `toast-alert ${type}`;
+            t.innerHTML = `
+                <div style="font-size:1.2rem;margin-top:2px;">
+                    <i class="${type === 'danger' ? 'fas fa-triangle-exclamation' : (type === 'warning' ? 'fas fa-bell' : 'fas fa-circle-info')}"></i>
+                </div>
+                <div>
+                    <h4 style="font-size:0.85rem;font-weight:700;">${title}</h4>
+                    <p style="font-size:0.75rem;color:var(--text-secondary);">${msg}</p>
+                </div>
+            `;
+            cont.appendChild(t);
+            setTimeout(() => {
+                t.style.opacity = '0';
+                t.style.transform = 'translateX(100%)';
+                t.style.transition = 'all 0.3s ease';
+                setTimeout(() => t.remove(), 300);
+            }, 4200);
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            initCharts();
+        });
+    </script>
+</body>
+</html>
